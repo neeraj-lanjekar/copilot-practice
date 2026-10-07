@@ -1,10 +1,15 @@
 import mongoose from 'mongoose';
 import { connectDatabase } from '../config/database.js';
-import { Activity, Leaderboard, Team, User, Workout } from '../models/index.js';
+import activity from '../models/Activity.js';
+import leaderboard from '../models/Leaderboard.js';
+import team from '../models/Team.js';
+import user from '../models/User.js';
+import workout from '../models/Workout.js';
 
 async function seedDatabase(): Promise<void> {
   try {
     await connectDatabase();
+    console.log('Seed the octofit_db database with test data');
 
     const userProfiles = [
       {
@@ -18,29 +23,35 @@ async function seedDatabase(): Promise<void> {
         displayName: 'Sam Moves',
       },
     ];
+    const userEmails = userProfiles.map((profile) => profile.email);
+    const workoutTitles = [
+      'Easy 20-minute walk',
+      'Bodyweight strength circuit',
+    ];
+    const existingUsers = await user
+      .find({ email: { $in: userEmails } })
+      .select('_id');
 
-    const users = await Promise.all(
-      userProfiles.map((profile) =>
-        User.findOneAndUpdate({ email: profile.email }, { $set: profile }, {
-          upsert: true,
-          new: true,
-          runValidators: true,
-        }),
-      ),
-    );
+    await Promise.all([
+      activity.deleteMany({ user: { $in: existingUsers.map(({ _id }) => _id) } }),
+      leaderboard.deleteMany({
+        user: { $in: existingUsers.map(({ _id }) => _id) },
+      }),
+      team.deleteMany({ name: 'OctoFit Pioneers' }),
+      workout.deleteMany({ title: { $in: workoutTitles } }),
+      user.deleteMany({ email: { $in: userEmails } }),
+    ]);
 
-    const team = await Team.findOneAndUpdate(
-      { name: 'OctoFit Pioneers' },
+    const users = await user.create(userProfiles);
+    const [octofitTeam] = await team.create([
       {
-        $set: {
-          description: 'A team building healthy habits together.',
-          members: users.map((user) => user._id),
-        },
+        name: 'OctoFit Pioneers',
+        description: 'A team building healthy habits together.',
+        members: users.map(({ _id }) => _id),
       },
-      { upsert: true, new: true, runValidators: true },
-    );
+    ]);
 
-    const activities = [
+    await activity.create([
       {
         user: users[0]._id,
         type: 'run',
@@ -55,57 +66,39 @@ async function seedDatabase(): Promise<void> {
         caloriesBurned: 350,
         loggedAt: new Date('2026-10-06T08:00:00.000Z'),
       },
-    ];
-    await Promise.all(
-      activities.map(({ user, type, loggedAt, ...activity }) =>
-        Activity.updateOne(
-          { user, type, loggedAt },
-          { $setOnInsert: { user, type, loggedAt, ...activity } },
-          { upsert: true, runValidators: true },
-        ),
-      ),
-    );
+    ]);
 
-    await Promise.all(
-      users.map((user, index) =>
-        Leaderboard.findOneAndUpdate(
-          { user: user._id, period: 'weekly' },
-          {
-            $set: {
-              team: team._id,
-              points: index === 0 ? 280 : 350,
-            },
-          },
-          { upsert: true, new: true, runValidators: true },
-        ),
-      ),
-    );
-
-    const workouts = [
+    await leaderboard.create([
       {
-        title: 'Easy 20-minute walk',
+        user: users[0]._id,
+        team: octofitTeam._id,
+        period: 'weekly',
+        points: 280,
+      },
+      {
+        user: users[1]._id,
+        team: octofitTeam._id,
+        period: 'weekly',
+        points: 350,
+      },
+    ]);
+
+    await workout.create([
+      {
+        title: workoutTitles[0],
         description: 'A gentle walk to build a consistent cardio habit.',
         category: 'cardio',
         durationMinutes: 20,
         difficulty: 'beginner',
       },
       {
-        title: 'Bodyweight strength circuit',
+        title: workoutTitles[1],
         description: 'A balanced full-body circuit with no equipment.',
         category: 'strength',
         durationMinutes: 30,
         difficulty: 'intermediate',
       },
-    ];
-    await Promise.all(
-      workouts.map(({ title, ...workout }) =>
-        Workout.updateOne(
-          { title },
-          { $set: { title, ...workout } },
-          { upsert: true, runValidators: true },
-        ),
-      ),
-    );
+    ]);
 
     console.log('Database seeding complete');
   } catch (error) {

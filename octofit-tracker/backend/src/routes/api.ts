@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import mongoose from 'mongoose';
-import { Activity, Leaderboard, Team, User, Workout } from '../models/index.js';
+import activity from '../models/Activity.js';
+import leaderboard from '../models/Leaderboard.js';
+import team from '../models/Team.js';
+import user from '../models/User.js';
+import workout from '../models/Workout.js';
 
-const apiRouter = Router();
+const router = Router();
 
 function requestBody(body: unknown): Record<string, unknown> {
   if (body === null || typeof body !== 'object' || Array.isArray(body)) {
@@ -34,7 +38,7 @@ function updatePayload(body: unknown, fields: string[]): Record<string, unknown>
   return payload;
 }
 
-apiRouter.get('/', (_request, response) => {
+router.get('/api', (_request, response) => {
   const codespaceName = process.env.CODESPACE_NAME;
   const baseUrl = codespaceName
     ? `https://${codespaceName}-8000.app.github.dev`
@@ -44,135 +48,135 @@ apiRouter.get('/', (_request, response) => {
     name: 'OctoFit Tracker API',
     baseUrl,
     endpoints: [
-      '/api/health',
-      '/api/users',
-      '/api/teams',
-      '/api/activities',
-      '/api/leaderboard',
-      '/api/workouts',
+      '/api/health/',
+      '/api/users/',
+      '/api/teams/',
+      '/api/activities/',
+      '/api/leaderboard/',
+      '/api/workouts/',
     ],
   });
 });
 
-apiRouter.get('/health', (_request, response) => {
+router.get('/api/health/', (_request, response) => {
   response.json({
     status: 'ok',
     database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
   });
 });
 
-apiRouter.get('/users', async (_request, response) => {
-  response.json(await User.find().sort({ username: 1 }).lean());
+router.get('/api/users/', async (_request, response) => {
+  response.json(await user.find().sort({ username: 1 }).lean());
 });
 
-apiRouter.post('/users', async (request, response) => {
-  const user = await User.create(requestBody(request.body));
-  response.status(201).json(user);
+router.post('/api/users/', async (request, response) => {
+  const createdUser = await user.create(requestBody(request.body));
+  response.status(201).json(createdUser);
 });
 
-apiRouter.get('/users/:id', async (request, response) => {
+router.get('/api/users/:id', async (request, response) => {
   validateId(request.params.id);
-  const user = await User.findById(request.params.id).lean();
-  if (!user) {
+  const foundUser = await user.findById(request.params.id).lean();
+  if (!foundUser) {
     response.status(404).json({ error: 'User not found' });
     return;
   }
-  response.json(user);
+  response.json(foundUser);
 });
 
-apiRouter.patch('/users/:id', async (request, response) => {
+router.patch('/api/users/:id', async (request, response) => {
   validateId(request.params.id);
-  const user = await User.findByIdAndUpdate(
+  const updatedUser = await user.findByIdAndUpdate(
     request.params.id,
     updatePayload(request.body, ['username', 'email', 'displayName']),
     { new: true, runValidators: true },
   ).lean();
-  if (!user) {
+  if (!updatedUser) {
     response.status(404).json({ error: 'User not found' });
     return;
   }
-  response.json(user);
+  response.json(updatedUser);
 });
 
-apiRouter.delete('/users/:id', async (request, response) => {
+router.delete('/api/users/:id', async (request, response) => {
   validateId(request.params.id);
-  const user = await User.findByIdAndDelete(request.params.id);
-  if (!user) {
+  const deletedUser = await user.findByIdAndDelete(request.params.id);
+  if (!deletedUser) {
     response.status(404).json({ error: 'User not found' });
     return;
   }
   response.status(204).end();
 });
 
-apiRouter.get('/teams', async (_request, response) => {
-  response.json(await Team.find().populate('members', 'username displayName').lean());
+router.get('/api/teams/', async (_request, response) => {
+  response.json(await team.find().populate('members', 'username displayName').lean());
 });
 
-apiRouter.post('/teams', async (request, response) => {
-  const team = await Team.create(requestBody(request.body));
-  response.status(201).json(team);
+router.post('/api/teams/', async (request, response) => {
+  const createdTeam = await team.create(requestBody(request.body));
+  response.status(201).json(createdTeam);
 });
 
-apiRouter.patch('/teams/:id', async (request, response) => {
+router.patch('/api/teams/:id', async (request, response) => {
   validateId(request.params.id);
-  const team = await Team.findByIdAndUpdate(
+  const updatedTeam = await team.findByIdAndUpdate(
     request.params.id,
     updatePayload(request.body, ['name', 'description', 'members']),
     { new: true, runValidators: true },
   )
     .populate('members', 'username displayName')
     .lean();
-  if (!team) {
+  if (!updatedTeam) {
     response.status(404).json({ error: 'Team not found' });
     return;
   }
-  response.json(team);
+  response.json(updatedTeam);
 });
 
-apiRouter.delete('/teams/:id', async (request, response) => {
+router.delete('/api/teams/:id', async (request, response) => {
   validateId(request.params.id);
-  const team = await Team.findByIdAndDelete(request.params.id);
-  if (!team) {
+  const deletedTeam = await team.findByIdAndDelete(request.params.id);
+  if (!deletedTeam) {
     response.status(404).json({ error: 'Team not found' });
     return;
   }
   response.status(204).end();
 });
 
-apiRouter.get('/teams/:id', async (request, response) => {
+router.get('/api/teams/:id', async (request, response) => {
   validateId(request.params.id);
-  const team = await Team.findById(request.params.id)
+  const foundTeam = await team.findById(request.params.id)
     .populate('members', 'username displayName')
     .lean();
-  if (!team) {
+  if (!foundTeam) {
     response.status(404).json({ error: 'Team not found' });
     return;
   }
-  response.json(team);
+  response.json(foundTeam);
 });
 
-apiRouter.get('/activities', async (request, response) => {
+router.get('/api/activities/', async (request, response) => {
   const filter: { user?: string } = {};
   if (typeof request.query.user === 'string') {
     validateId(request.query.user);
     filter.user = request.query.user;
   }
   response.json(
-    await Activity.find(filter)
+    await activity.find(filter)
       .populate('user', 'username displayName')
       .sort({ loggedAt: -1 })
       .lean(),
   );
 });
 
-apiRouter.post('/activities', async (request, response) => {
-  const activity = await Activity.create(requestBody(request.body));
-  response.status(201).json(activity);
+router.post('/api/activities/', async (request, response) => {
+  const createdActivity = await activity.create(requestBody(request.body));
+  response.status(201).json(createdActivity);
 });
 
-apiRouter.patch('/activities/:id', async (request, response) => {
+router.patch('/api/activities/:id', async (request, response) => {
   validateId(request.params.id);
-  const activity = await Activity.findByIdAndUpdate(
+  const updatedActivity = await activity.findByIdAndUpdate(
     request.params.id,
     updatePayload(request.body, [
       'user',
@@ -185,24 +189,24 @@ apiRouter.patch('/activities/:id', async (request, response) => {
   )
     .populate('user', 'username displayName')
     .lean();
-  if (!activity) {
+  if (!updatedActivity) {
     response.status(404).json({ error: 'Activity not found' });
     return;
   }
-  response.json(activity);
+  response.json(updatedActivity);
 });
 
-apiRouter.delete('/activities/:id', async (request, response) => {
+router.delete('/api/activities/:id', async (request, response) => {
   validateId(request.params.id);
-  const activity = await Activity.findByIdAndDelete(request.params.id);
-  if (!activity) {
+  const deletedActivity = await activity.findByIdAndDelete(request.params.id);
+  if (!deletedActivity) {
     response.status(404).json({ error: 'Activity not found' });
     return;
   }
   response.status(204).end();
 });
 
-apiRouter.get('/leaderboard', async (request, response) => {
+router.get('/api/leaderboard/', async (request, response) => {
   const period =
     typeof request.query.period === 'string' ? request.query.period : 'weekly';
   if (!['weekly', 'monthly', 'all-time'].includes(period)) {
@@ -210,7 +214,7 @@ apiRouter.get('/leaderboard', async (request, response) => {
     return;
   }
   response.json(
-    await Leaderboard.find({ period })
+    await leaderboard.find({ period })
       .populate('user', 'username displayName')
       .populate('team', 'name')
       .sort({ points: -1 })
@@ -218,14 +222,14 @@ apiRouter.get('/leaderboard', async (request, response) => {
   );
 });
 
-apiRouter.post('/leaderboard', async (request, response) => {
-  const entry = await Leaderboard.create(requestBody(request.body));
+router.post('/api/leaderboard/', async (request, response) => {
+  const entry = await leaderboard.create(requestBody(request.body));
   response.status(201).json(entry);
 });
 
-apiRouter.patch('/leaderboard/:id', async (request, response) => {
+router.patch('/api/leaderboard/:id', async (request, response) => {
   validateId(request.params.id);
-  const entry = await Leaderboard.findByIdAndUpdate(
+  const entry = await leaderboard.findByIdAndUpdate(
     request.params.id,
     updatePayload(request.body, ['user', 'team', 'period', 'points']),
     { new: true, runValidators: true },
@@ -240,9 +244,9 @@ apiRouter.patch('/leaderboard/:id', async (request, response) => {
   response.json(entry);
 });
 
-apiRouter.delete('/leaderboard/:id', async (request, response) => {
+router.delete('/api/leaderboard/:id', async (request, response) => {
   validateId(request.params.id);
-  const entry = await Leaderboard.findByIdAndDelete(request.params.id);
+  const entry = await leaderboard.findByIdAndDelete(request.params.id);
   if (!entry) {
     response.status(404).json({ error: 'Leaderboard entry not found' });
     return;
@@ -250,18 +254,18 @@ apiRouter.delete('/leaderboard/:id', async (request, response) => {
   response.status(204).end();
 });
 
-apiRouter.get('/workouts', async (_request, response) => {
-  response.json(await Workout.find().sort({ createdAt: -1 }).lean());
+router.get('/api/workouts/', async (_request, response) => {
+  response.json(await workout.find().sort({ createdAt: -1 }).lean());
 });
 
-apiRouter.post('/workouts', async (request, response) => {
-  const workout = await Workout.create(requestBody(request.body));
-  response.status(201).json(workout);
+router.post('/api/workouts/', async (request, response) => {
+  const createdWorkout = await workout.create(requestBody(request.body));
+  response.status(201).json(createdWorkout);
 });
 
-apiRouter.patch('/workouts/:id', async (request, response) => {
+router.patch('/api/workouts/:id', async (request, response) => {
   validateId(request.params.id);
-  const workout = await Workout.findByIdAndUpdate(
+  const updatedWorkout = await workout.findByIdAndUpdate(
     request.params.id,
     updatePayload(request.body, [
       'title',
@@ -272,21 +276,21 @@ apiRouter.patch('/workouts/:id', async (request, response) => {
     ]),
     { new: true, runValidators: true },
   ).lean();
-  if (!workout) {
+  if (!updatedWorkout) {
     response.status(404).json({ error: 'Workout not found' });
     return;
   }
-  response.json(workout);
+  response.json(updatedWorkout);
 });
 
-apiRouter.delete('/workouts/:id', async (request, response) => {
+router.delete('/api/workouts/:id', async (request, response) => {
   validateId(request.params.id);
-  const workout = await Workout.findByIdAndDelete(request.params.id);
-  if (!workout) {
+  const deletedWorkout = await workout.findByIdAndDelete(request.params.id);
+  if (!deletedWorkout) {
     response.status(404).json({ error: 'Workout not found' });
     return;
   }
   response.status(204).end();
 });
 
-export default apiRouter;
+export default router;

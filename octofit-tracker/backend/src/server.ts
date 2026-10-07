@@ -1,10 +1,14 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { connectDatabase } from './config/database.js';
-import apiRouter from './routes/api.js';
+import { createApiRouter } from './routes/api.js';
 
 const app = express();
 const port = Number(process.env.PORT) || 8000;
+const codespaceName = process.env.CODESPACE_NAME;
+const baseUrl = codespaceName
+  ? `https://${codespaceName}-8000.app.github.dev`
+  : 'http://localhost:8000';
 
 app.use(express.json());
 
@@ -22,7 +26,7 @@ app.use((_request, response, next) => {
   next();
 });
 
-app.use(apiRouter);
+app.use(createApiRouter(baseUrl));
 
 app.use((_request, response) => {
   response.status(404).json({ error: 'Route not found' });
@@ -71,7 +75,7 @@ app.use(
 async function startServer(): Promise<void> {
   await connectDatabase();
   app.listen(port, () => {
-    console.log(`OctoFit API listening on port ${port}`);
+    console.log(`OctoFit API listening at ${baseUrl} on port ${port}`);
   });
 }
 

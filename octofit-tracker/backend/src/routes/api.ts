@@ -6,7 +6,8 @@ import team from '../models/Team.js';
 import user from '../models/User.js';
 import workout from '../models/Workout.js';
 
-const router = Router();
+export function createApiRouter(baseUrl: string): Router {
+  const router = Router();
 
 function requestBody(body: unknown): Record<string, unknown> {
   if (body === null || typeof body !== 'object' || Array.isArray(body)) {
@@ -38,25 +39,20 @@ function updatePayload(body: unknown, fields: string[]): Record<string, unknown>
   return payload;
 }
 
-router.get('/api', (_request, response) => {
-  const codespaceName = process.env.CODESPACE_NAME;
-  const baseUrl = codespaceName
-    ? `https://${codespaceName}-8000.app.github.dev`
-    : 'http://localhost:8000';
-
-  response.json({
-    name: 'OctoFit Tracker API',
-    baseUrl,
-    endpoints: [
-      '/api/health/',
-      '/api/users/',
-      '/api/teams/',
-      '/api/activities/',
-      '/api/leaderboard/',
-      '/api/workouts/',
-    ],
+  router.get('/api', (_request, response) => {
+    response.json({
+      name: 'OctoFit Tracker API',
+      baseUrl,
+      endpoints: [
+        '/api/health/',
+        '/api/users/',
+        '/api/teams/',
+        '/api/activities/',
+        '/api/leaderboard/',
+        '/api/workouts/',
+      ],
+    });
   });
-});
 
 router.get('/api/health/', (_request, response) => {
   response.json({
@@ -293,4 +289,5 @@ router.delete('/api/workouts/:id', async (request, response) => {
   response.status(204).end();
 });
 
-export default router;
+  return router;
+}

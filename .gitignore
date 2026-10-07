@@ -8,6 +8,7 @@ venv
 
 # React node_modules
 node_modules
+octofit-tracker/backend/dist/
 /.pnp
 .pnp.js
 

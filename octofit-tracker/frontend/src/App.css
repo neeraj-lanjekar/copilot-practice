@@ -1,0 +1,138 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1rem clamp(1rem, 5vw, 4.5rem);
+  color: #f7fbf7;
+  background: #10231f;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: inherit;
+  font-size: 1.15rem;
+  font-weight: 750;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.app-header .nav {
+  gap: 0.25rem;
+}
+
+.app-header .nav-link {
+  color: #d4e2da;
+  font-size: 0.92rem;
+}
+
+.app-header .nav-link:hover,
+.app-header .nav-link:focus-visible {
+  color: #fff;
+  background: #254239;
+}
+
+.app-content {
+  width: min(1180px, 100%);
+  flex: 1;
+  margin: 0 auto;
+  padding: clamp(2rem, 6vw, 4.5rem) clamp(1rem, 4vw, 2.5rem);
+}
+
+.page-heading {
+  margin-bottom: 2rem;
+}
+
+.page-heading h1 {
+  margin: 0.25rem 0 0.5rem;
+  color: #10231f;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 750;
+  letter-spacing: -0.045em;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #38745d;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.page-description {
+  margin: 0;
+  color: #63716b;
+}
+
+.data-table-wrap {
+  overflow: hidden;
+  border: 1px solid #e0e8e2;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 10px 30px rgb(16 35 31 / 5%);
+}
+
+.data-table-wrap thead th {
+  padding: 1rem 1.25rem;
+  border-bottom-color: #e0e8e2;
+  color: #52645b;
+  background: #f7faf7;
+  font-size: 0.76rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.data-table-wrap tbody td {
+  padding: 1rem 1.25rem;
+  color: #263830;
+}
+
+.empty-state {
+  padding: 2rem;
+  border: 1px dashed #cbd8cf;
+  border-radius: 1rem;
+  color: #63716b;
+  background: #fff;
+  text-align: center;
+}
+
+.app-footer {
+  padding: 1.25rem;
+  color: #63716b;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .app-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .app-header .nav {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .app-header .nav-link {
+    white-space: nowrap;
+  }
+}

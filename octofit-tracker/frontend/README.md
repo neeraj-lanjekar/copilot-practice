@@ -1,32 +1,24 @@
-# React + TypeScript + Vite
+# OctoFit Tracker presentation tier
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The React 19 presentation tier uses Vite, React Router, and Bootstrap. Start it
+from the repository root with:
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm --prefix octofit-tracker/frontend run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The frontend calls the API on port `8000`. Define Vite's
+`VITE_CODESPACE_NAME` in `octofit-tracker/frontend/.env.local` when using a
+Codespaces API URL. For example:
+
+```dotenv
+VITE_CODESPACE_NAME=your-codespace-name
+```
+
+Vite reads this variable at startup, so restart the dev server after changing
+`.env.local`. When it is unset, the app safely falls back to
+`http://localhost:8000`.
+
+The application includes pages for `/activities`, `/leaderboard`, `/teams`,
+`/users`, and `/workouts`. Collection pages accept both plain JSON arrays and
+paginated responses containing a `results` or `data` array.
